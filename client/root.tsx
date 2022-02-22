@@ -18,3 +18,17 @@ function Root() {
 render((<StrictMode>
     <Root />
 </StrictMode>), document.getElementById('root'))
+
+async function persist() {
+    return await (navigator.storage && navigator.storage.persist &&
+        navigator.storage.persist());
+}
+
+async function isStoragePersisted() {
+    return await (navigator.storage && navigator.storage.persisted &&
+      navigator.storage.persisted());
+}
+
+isStoragePersisted().then(persisted => {
+    if (!persisted) persist()
+})

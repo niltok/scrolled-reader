@@ -1,7 +1,8 @@
 {
     "scripts": {
         "dev": "vite",
-        "build": "tsc -p client && vite build && cp client/CNAME docs/",
+        "build": "tsc -p client && vite build",
+        "page": "tsc -p client && vite build && cp client/CNAME docs/ && cp docs/index.html docs/404.html",
         "preview": "vite preview"
     },
     "devDependencies": {

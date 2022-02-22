@@ -36,4 +36,5 @@ export interface Session {
     book: string
     pos: number
     per: number
+    timestamp: number
 }

@@ -140,7 +140,7 @@ export function SessionList() {
     return (
         <ul>
             { sessionInfo?.map((s, i) => <li key={i}><Link to={`view/${s.id}`}>{ 
-                "[" + Math.round(s.pos / s.size) + "%] -> " + s.name
+                "[" + Math.round(s.pos / s.size * 100) + "%] -> " + s.name
             }</Link></li>)}
         </ul>
     )

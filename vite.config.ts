@@ -8,6 +8,10 @@ export default defineConfig({
         outDir: '../docs',
         emptyOutDir: true,
     },
+    esbuild: {
+        "sourcemap": true,
+        "minify": false,
+    },
     root: "client",
     define: {
         StoreName: '"Book"',

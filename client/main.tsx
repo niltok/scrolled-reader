@@ -168,14 +168,18 @@ export function Main() {
     })
     const logger = (msg: string) => setLog(list => list.push(msg))
     return (
-    <div>
-        <p>
+    <div style={{
+        margin: '100px auto',
+        width: '90%',
+        maxWidth: '650px',
+    }}>
+        <p style={{display: 'flex'}}>
             <span>
                 <input type="text" value={url} onChange={ e => setUrl(e.target.value) }/>
                 <button onClick={ () => importEpub(url, logger, url) }>Import from URL</button>
             </span>
             <span>
-            <input type="file" accept=".epub" onChange={ e => {
+            <input title=' ' type="file" accept=".epub" onChange={ e => {
                 const files = e.target.files
                 if (files && files.length > 0)
                     importEpub(URL.createObjectURL(files[0]), logger, files[0].name)

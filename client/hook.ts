@@ -1,7 +1,6 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { useState, useEffect } from 'react'
 import { bookTable, get, session, set } from './storage'
-import { JsonBookKey, Session } from './types'
+import { Session } from './types'
 
 export function useCacheAsync<T>(f: () => Promise<T>): T | undefined {
     const [data, setData] = useState<T>()

@@ -51,7 +51,11 @@ export const useKV = <T>(key: string, val: T): [T, number, React.Dispatch<React.
     }
     
     useEffect(() => {
-        if (!live || live.timestamp < timestamp) db.kv.put({key, val: value, timestamp})
+        db.transaction('rw', db.kv, async () => {
+            const data = await db.kv.get(key)
+            if (!data || data.timestamp < timestamp)
+                await db.kv.put({ key, val: value, timestamp })
+        })
     }, [key, value])
 
     function update(v: React.SetStateAction<T>) {

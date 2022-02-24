@@ -170,7 +170,10 @@ function InjEditor() {
     }
     return (
     <div>
-        <textarea value={text} onChange={e => setText(e.target.value)}/>
+        <textarea value={text} onChange={e => setText(e.target.value)} style={{
+            width: '100%',
+            height: '20em',
+        }}/>
         <br/>
         <button onClick={() => {
             setSaveTime(Date.now())
@@ -194,7 +197,7 @@ export function Main() {
         width: '90%',
         maxWidth: '650px',
     }}>
-        <p style={{display: 'flex'}}>
+        <p style={{}}>
             <span>Import .epub: </span>
             <span>
             <input title=' ' type="file" accept=".epub" onChange={ e => {
@@ -214,6 +217,7 @@ export function Main() {
                 <button key={key} onClick={ () => setPage(key) }>{key}</button>
             ) }
         </p>
+        <br/>
         { pageTable.get(page) }
     </div>)
 }

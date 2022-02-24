@@ -16,6 +16,7 @@ export interface Elem {
 export interface JsonBookKey {
     id: string
     title: string
+    size: number
 }
 
 export interface JsonBook extends JsonBookKey {

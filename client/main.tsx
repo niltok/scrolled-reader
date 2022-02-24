@@ -1,13 +1,14 @@
 import * as React from 'react'
 import { Book, NavItem } from 'epubjs'
 import { List, Map } from 'immutable'
-import { Path } from './types'
+import { Path, Session } from './types'
 import { Elem, Menu } from './types'
 import { uuid, asyncAll, resolvePath } from './utils'
 import { SpineItem } from 'epubjs/types/section'
-import { bookTable, bookKey, session } from './storage'
+import { bookTable, bookKey, session, kv, db } from './storage'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
+import { useKV } from './hook'
 
 const { useState } = React
 
@@ -127,26 +128,27 @@ async function importEpub(
     const menu = foldMenu(List(navi.toc), info.table)
     const id = uuid()
     const title = meta.title || optionalName
-    bookTable.add({ id, title, elem, menu, pic, })
-    bookKey.add({ id, title, })
+    const size = elem.length
+    bookTable.add({ id, title, elem, menu, pic, size })
+    bookKey.add({ id, title, size })
     logger("Successfully imported " + title)
     logger("Book ID: " + id)
 }
 
-export function SessionList() {
+function SessionList() {
     const sessionInfo = useLiveQuery(() =>
         session.toArray()
     )
     return (
         <ul>
             { sessionInfo?.map((s, i) => <li key={i}><Link to={`view/${s.id}`}>{ 
-                "[ " + s.pos + " / " + s.size + " ] -> " + s.name
+                "[ " + Math.floor(s.pos / s.size * 100 * 10) / 10 + "% ] -> " + s.name
             }</Link></li>)}
         </ul>
     )
 }
 
-export function BookList() {
+function BookList() {
     const bookInfo = useLiveQuery(() => 
         bookKey.toArray()
     )
@@ -158,13 +160,32 @@ export function BookList() {
     </ul>)
 }
 
+function InjEditor() {
+    const [inj, timestamp, setInj] = useKV('injection', '')
+    const [text, setText] = useState('')
+    const [saveTime, setSaveTime] = useState(0)
+    if (timestamp > saveTime) {
+        setText(inj)
+        setSaveTime(timestamp)
+    }
+    return (
+    <div>
+        <textarea value={text} onChange={e => setText(e.target.value)}/>
+        <br/>
+        <button onClick={() => {
+            setSaveTime(Date.now())
+            setInj(text)
+        }}>Save</button>
+    </div>)
+}
+
 export function Main() {
-    const [url, setUrl] = useState('')
     const [log, setLog] = useState(List<string>())
     const [page, setPage] = useState('Sessions')
     const pageTable = Map({
         'Sessions': <SessionList />,
         'Books': <BookList />,
+        'Injection': <InjEditor />
     })
     const logger = (msg: string) => setLog(list => list.push(msg))
     return (
@@ -174,10 +195,7 @@ export function Main() {
         maxWidth: '650px',
     }}>
         <p style={{display: 'flex'}}>
-            <span>
-                <input type="text" value={url} onChange={ e => setUrl(e.target.value) }/>
-                <button onClick={ () => importEpub(url, logger, url) }>Import from URL</button>
-            </span>
+            <span>Import .epub: </span>
             <span>
             <input title=' ' type="file" accept=".epub" onChange={ e => {
                 const files = e.target.files
@@ -186,7 +204,11 @@ export function Main() {
             } }/>
             </span>
         </p>
-        <div>{ log.map((l, i) => <p key={i}>{l}</p>) }</div>
+        <ul style={{
+            fontSize: '11px',
+        }}>
+            { log.map((l, i) => <li key={i}>{l}</li>) }
+        </ul>
         <p>
             { pageTable.keySeq().map(key => 
                 <button key={key} onClick={ () => setPage(key) }>{key}</button>

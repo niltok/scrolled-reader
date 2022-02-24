@@ -3,21 +3,9 @@ import { render } from 'react-dom'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Main } from './main'
 import { Viewer } from './viewer'
+import { Subscribe } from '@react-rxjs/core'
 
-const { StrictMode } = React
-
-function Root() {
-    return (<BrowserRouter basename={ RouteRoot }>
-        <Routes>
-            <Route path='/' element={ <Main /> }></Route>
-            <Route path='/view/:id' element={ <Viewer /> }></Route>
-        </Routes>
-    </BrowserRouter>)
-}
-
-render((<StrictMode>
-    <Root />
-</StrictMode>), document.getElementById('root'))
+const { StrictMode, useEffect } = React
 
 async function persist() {
     return await (navigator.storage && navigator.storage.persist &&
@@ -29,6 +17,25 @@ async function isStoragePersisted() {
       navigator.storage.persisted());
 }
 
-isStoragePersisted().then(persisted => {
-    if (!persisted) persist()
-})
+function Root() {
+    useEffect(() => {
+        isStoragePersisted().then(persisted => {
+            if (!persisted) persist()
+        })
+    }, [])
+    return (
+    <Subscribe>
+        <BrowserRouter basename={ RouteRoot }>
+            <Routes>
+                <Route path='/' element={ <Main /> }></Route>
+                <Route path='/view/:id' element={ <Viewer /> }></Route>
+            </Routes>
+        </BrowserRouter>
+    </Subscribe>)
+}
+
+render((<StrictMode>
+    <Root />
+</StrictMode>), document.getElementById('root'))
+
+

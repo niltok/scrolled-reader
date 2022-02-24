@@ -2,7 +2,7 @@ import Dexie from 'dexie'
 import { JsonBook, JsonBookKey, Session } from './types'
 
 class Storage extends Dexie {
-    public kv!: Dexie.Table<{ key: string, val: any }, string>
+    public kv!: Dexie.Table<{ key: string, val: any, timestamp: number }, string>
     public bookKeys!: Dexie.Table<JsonBookKey, string>
     public books!: Dexie.Table<JsonBook, string>
     public session!: Dexie.Table<Session, string>
@@ -17,17 +17,19 @@ class Storage extends Dexie {
     }
 }
 
-const db = new Storage()
+export const db = new Storage()
 
 export const bookTable = db.books
 export const bookKey = db.bookKeys
 export const session = db.session
 
-export async function get<T>(key: string): Promise<T | undefined> {
+async function get<T>(key: string): Promise<T | undefined> {
     const value = await db.kv.get(key)
     return value?.val as T
 }
 
-export async function set<T>(key: string, val: T): Promise<void> {
-    await db.kv.put({key, val: JSON.parse(JSON.stringify(val))})
+async function set<T>(key: string, val: T): Promise<void> {
+    await db.kv.put({key, val, timestamp: Date.now()})
 }
+
+export const kv = {get, set}

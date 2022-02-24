@@ -1,5 +1,6 @@
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState, useEffect } from 'react'
-import { bookTable, get, session, set } from './storage'
+import { bookKey, bookTable, db, kv, session } from './storage'
 import { Session } from './types'
 
 export function useCacheAsync<T>(f: () => Promise<T>): T | undefined {
@@ -11,44 +12,54 @@ export function useCacheAsync<T>(f: () => Promise<T>): T | undefined {
 }
 
 export function useSession(id: string, bid: string | null): 
-        [Session | null | undefined, React.Dispatch<React.SetStateAction<Session | null | undefined>>] {
-    const [value, setValue] = useState<Session | null | undefined>(undefined)
+        [Session | undefined, React.Dispatch<React.SetStateAction<Session | undefined>>] {
+    const [value, setValue] = useState<Session | undefined>(undefined)
+    const live = useLiveQuery(() => session.get(id), [id])
+    if (live && (!value || live.timestamp > value.timestamp)) {
+        console.log('db new session', live)
+        setValue(live)
+    }
     useEffect(() => {(async () => {
         const s = await session.get(id)
-        if (s) return s
-        if (!bid) return null
-        const bk = await bookTable.get(bid)
+        if (s || !bid) return
+        const bk = await bookKey.get(bid)
         if (!bk) return null
         await session.put({ 
             id, 
             name: bk.title, 
-            size: bk.elem.length, 
+            size: bk.size, 
             book: bid, 
             pos: 0, 
             per: 0,
-            timestamp: Date.now()
+            timestamp: 0
         })
-        return await session.get(id)
-    })().then(s => { if (s) setValue(s) })}, [id, bid])
+    })()}, [id, bid])
     useEffect(() => {
-        if (value) session.put({ ...value, timestamp: Date.now() })
-    }, [value])
+        if (value && (!live || value.timestamp > live.timestamp)) 
+            session.put(value)
+    }, [value, live])
     return [value, setValue]
 }
 
-export const useKV = <T>(key: string, val: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
+export const useKV = <T>(key: string, val: T): [T, number, React.Dispatch<React.SetStateAction<T>>] => {
     const [value, setValue] = useState(val)
-
-    useEffect(() => {
-        get<T>(key).then(value  => {
-            if (value) 
-                setValue(value)
-        })
-    }, [key])
+    const [timestamp, setTimestamp] = useState(0)
+    const live = useLiveQuery(() => db.kv.get(key), [key])
+    if (live && live.timestamp > timestamp) {
+        setValue(live.val as T)
+        setTimestamp(live.timestamp)
+    }
     
     useEffect(() => {
-        set(key, value)
+        if (!live || live.timestamp < timestamp) db.kv.put({key, val: value, timestamp})
     }, [key, value])
+
+    function update(v: React.SetStateAction<T>) {
+        if (typeof v === 'function')
+            setValue((v as (prev: T) => T)(value))
+        else setValue(v)
+        setTimestamp(Date.now())
+    }
     
-    return [value, setValue]
+    return [value, timestamp, update]
 }

@@ -6,6 +6,7 @@ import { bookTable, session } from './storage'
 import { Elem } from './types'
 import { throttle } from 'lodash'
 import { useSession } from './hook'
+import { Injection } from './injection'
 
 function renderElem(
     elem: Elem, 
@@ -49,7 +50,19 @@ export function Viewer() {
     const box = useRef<HTMLDivElement>(null)
     const viewer = useRef<HTMLDivElement>(null)
     const [tempOffset, setTempOffset] = useState(0)
-    async function move(delta: number) {
+    const [height, setHeight] = useState(0)
+    const [width, setWidth] = useState(0)
+    useEffect(() => {
+        function handler() {
+            setHeight(window.innerHeight)
+            setWidth(window.innerWidth)
+        }
+        window.addEventListener('resize', handler)
+        return () => {
+            window.removeEventListener('resize', handler)
+        }
+    })
+    function move(delta: number) {
         let off = Math.max(0, offset + delta)
         for (let i = 0; i < domRef.size - 1; i++) {
             const e = domRef.get(i)
@@ -59,7 +72,8 @@ export function Viewer() {
                 setInfo(info => (info ? {
                     ...info, 
                     pos: top + i, 
-                    per: (off - e.offsetTop) / (n.offsetTop - e.offsetTop) 
+                    per: (off - e.offsetTop) / (n.offsetTop - e.offsetTop),
+                    timestamp: Date.now()
                 } : info))
                 return
             }
@@ -69,7 +83,8 @@ export function Viewer() {
         setInfo(info => (info ? {
             ...info,
             pos: top + domRef.size - 1,
-            per: Math.min(1, (off - e.offsetTop) / e.offsetHeight)
+            per: Math.min(1, (off - e.offsetTop) / e.offsetHeight),
+            timestamp: Date.now()
         } : info))
     }
     // 计算渲染结果距离中央偏移
@@ -77,9 +92,9 @@ export function Viewer() {
         if (!info) return
         const center = info.pos - top
         const offsetTotal = viewer.current?.offsetHeight || 0
-        if (offsetTotal == 0) setLoading(n => n + 1)
+        if (offsetTotal == 0) return
         else setLoading(0)
-        if (loading == 0 && offsetTotal < box.current!!.offsetHeight * 2)
+        if (loading == 0 && offsetTotal < box.current!!.offsetHeight * 3)
             setExtendSize(size => size + 5)
         const e = domRef.get(center)
         const n = domRef.get(center + 1)
@@ -93,36 +108,34 @@ export function Viewer() {
         x: 0,
         y: 0,
     })
+    function wheel(e: WheelEvent) {
+        move(e.deltaY)
+    }
+    function touchstart(e: TouchEvent) {
+        if (touchStatus.current.id) return
+        setTempOffset(0)
+        touchStatus.current.id = e.changedTouches[0].identifier
+        touchStatus.current.x = e.changedTouches[0].screenX
+        touchStatus.current.y = e.changedTouches[0].screenY
+    }
+    function touchmove(e: TouchEvent) {
+        e.preventDefault()
+        List(e.changedTouches).forEach(t => {
+            if (t.identifier == touchStatus.current.id) {
+                setTempOffset(touchStatus.current.y - t.screenY)
+            }
+        })
+    }
+    function touchend(e: TouchEvent) {
+        List(e.changedTouches).forEach(t => {
+            if (t.identifier == touchStatus.current.id) {
+                touchStatus.current.id = null
+                move(touchStatus.current.y - t.screenY)
+                setTempOffset(0)
+            }
+        })
+    }
     useEffect(() => {
-        function wheel(e: WheelEvent) {
-            move(e.deltaY)
-        }
-        function touchstart(e: TouchEvent) {
-            if (touchStatus.current.id) return
-            setTempOffset(0)
-            touchStatus.current.id = e.changedTouches[0].identifier
-            touchStatus.current.x = e.changedTouches[0].screenX
-            touchStatus.current.y = e.changedTouches[0].screenY
-        }
-        function touchmove(e: TouchEvent) {
-            e.preventDefault()
-            List(e.changedTouches).forEach(t => {
-                if (t.identifier == touchStatus.current.id) {
-                    setTempOffset(touchStatus.current.y - t.screenY)
-                }
-            })
-        }
-        function touchend(e: TouchEvent) {
-            List(e.changedTouches).forEach(t => {
-                if (t.identifier == touchStatus.current.id) {
-                    touchStatus.current.id = null
-                    move(touchStatus.current.y - t.screenY).then(() => {
-                        updateOffset()
-                        setTempOffset(0)
-                    })
-                }
-            })
-        }
         if (box.current) {
             box.current.addEventListener('wheel', wheel, { passive: true })
             box.current.addEventListener('touchstart', touchstart, { passive: true })
@@ -144,7 +157,12 @@ export function Viewer() {
     }, [book])
     useEffect(() => () => {table.forEach((val) => URL.revokeObjectURL(val))}, [])
 
-    if (info === null) return (<div>Bad Parameters</div>)
+    useEffect(() => {
+        document.title = info?.name || 'Scrolled Reader'
+    }, [info?.name])
+
+    if (!info || !book) 
+        return (<div><p>Loading...</p></div>)
     return (
     <div ref={box} style={{
         position: 'relative',
@@ -159,10 +177,11 @@ export function Viewer() {
             {items?.map((elem, i) => renderElem(
                 elem, 
                 table, 
-                pos => setInfo(info => info ? { ...info, pos, per: 0 } : info), 
-                i, 
+                pos => setInfo(info => info ? { ...info, pos, per: 0, timestamp: Date.now() } : info), 
+                i + top, 
                 (e: HTMLElement) => { domRef = domRef.push(e) }
             ))}
         </div>
+        <Injection />
     </div>)
 }

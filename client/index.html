@@ -4,11 +4,16 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
+    <title>Scrolled Reader</title>
     <script type="module" src="./root.tsx"></script>
     <style>
         #root {
             inset: 0;
             position: fixed;
+        }
+        
+        * {
+            margin: 0;
         }
         
         body {
@@ -22,22 +27,27 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
+            font-family: serif;
         }
         
         p {
-            margin-bottom: 2em;
+            padding-top: 2em;
+        }
+        
+        ul,
+        ol {
+            font-size: 16px;
         }
         
         h1 {
+            padding-top: 3em;
             font-size: 2.5em;
             color: #EF96AB;
             line-height: 1.5em;
         }
         
         h2 {
-            margin-top: 2em;
-            line-height: 1.5em;
+            padding-top: 2em;
         }
         
         blockquote {
@@ -70,7 +80,7 @@
         }
         
         img {
-            margin: auto;
+            margin: 0 auto;
             max-width: 100%;
         }
         
@@ -95,7 +105,6 @@
             margin: 0 auto;
         }
     </style>
-    <style id="style-inj"></style>
 </head>
 
 <body>

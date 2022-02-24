@@ -7,6 +7,7 @@ export default defineConfig({
     build: {
         outDir: '../docs',
         emptyOutDir: true,
+        minify: true
     },
     esbuild: {
         "sourcemap": true,
@@ -15,6 +16,5 @@ export default defineConfig({
     root: "client",
     define: {
         StoreName: '"Book"',
-        RouteRoot: '"/"',
     },
 })

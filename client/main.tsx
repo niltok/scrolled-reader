@@ -190,6 +190,9 @@ export function Main() {
         'Books': <BookList />,
         'Injection': <InjEditor />
     })
+    React.useEffect(() => {
+        document.title = 'Scrolled Reader'
+    })
     const logger = (msg: string) => setLog(list => list.push(msg))
     return (
     <div style={{

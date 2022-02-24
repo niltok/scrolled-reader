@@ -25,7 +25,7 @@ function Root() {
     }, [])
     return (
     <Subscribe>
-        <BrowserRouter basename={ RouteRoot }>
+        <BrowserRouter>
             <Routes>
                 <Route path='/' element={ <Main /> }></Route>
                 <Route path='/view/:id' element={ <Viewer /> }></Route>

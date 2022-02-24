@@ -7,13 +7,15 @@ export function Injection() {
     const script = useLiveQuery(() => 
         kv.get<string>('injection')
     )
-    const ref = useRef<HTMLDivElement>(null)
     useEffect(() => {
-        if (ref.current && script) {
-            ref.current.innerHTML = script
+        const elem = document.createElement('div')
+        if (script) {
+            elem.innerHTML = script
+            document.head.append(elem)
         }
+        return () => {elem.remove()}
     }, [script])
     return (<div style={{
         display: 'none',
-    }} ref={ref}></div>)
+    }}></div>)
 }

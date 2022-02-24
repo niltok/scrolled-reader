@@ -8,12 +8,11 @@ export function Injection() {
         kv.get<string>('injection')
     )
     useEffect(() => {
-        const elem = document.createElement('div')
+        const temp = document.head.innerHTML
         if (script) {
-            elem.innerHTML = script
-            document.head.append(elem)
+            document.head.innerHTML = temp + script
         }
-        return () => {elem.remove()}
+        return () => {document.head.innerHTML = temp}
     }, [script])
     return (<div style={{
         display: 'none',

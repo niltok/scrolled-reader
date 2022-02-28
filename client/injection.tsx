@@ -14,7 +14,5 @@ export function Injection() {
         }
         return () => {document.head.innerHTML = temp}
     }, [script])
-    return (<div style={{
-        display: 'none',
-    }}></div>)
+    return (<></>)
 }

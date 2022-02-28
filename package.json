@@ -1,8 +1,9 @@
 {
     "scripts": {
         "dev": "vite",
-        "build": "tsc -p client && vite build",
-        "page": "tsc -p client && vite build && cp CNAME docs/ && cp docs/index.html docs/404.html",
+        "server": "tsc -p server && node server/dist/index.js",
+        "build": "tsc -p client && vite build && tsc -p server",
+        "page": "tsc -p client && vite build && rm -r docs && cp -r client/dist docs && cp CNAME docs/ && cp docs/index.html docs/404.html",
         "preview": "vite preview"
     },
     "devDependencies": {
@@ -12,6 +13,7 @@
         "@types/react-dom": "^17.0.11"
     },
     "dependencies": {
+        "@msgpack/msgpack": "^2.7.2",
         "@react-rxjs/core": "^0.8.4",
         "@react-rxjs/utils": "^0.9.3",
         "@vitejs/plugin-react": "^1.2.0",

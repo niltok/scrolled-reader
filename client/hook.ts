@@ -1,7 +1,21 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState, useEffect } from 'react'
+import { syncSession } from './dbus'
 import { bookKey, bookTable, db, kv, session } from './storage'
 import { Session } from './types'
+
+export function useTemp<T>(key: string, val?: T)
+        : [T | undefined, React.Dispatch<React.SetStateAction<T | undefined>>] {
+    const [temp, setTemp] = useState(val)
+    useEffect(() => {
+        const t = sessionStorage.getItem(key)
+        if (t) setTemp(JSON.parse(t).val)
+    }, [key])
+    useEffect(() => {
+        sessionStorage.setItem(key, JSON.stringify({key, val: temp}))
+    }, [key, temp])
+    return [temp, setTemp]
+}
 
 export function useCacheAsync<T>(f: () => Promise<T>): T | undefined {
     const [data, setData] = useState<T>()
@@ -35,8 +49,10 @@ export function useSession(id: string, bid: string | null):
         })
     })()}, [id, bid])
     useEffect(() => {
-        if (value && (!live || value.timestamp > live.timestamp)) 
+        if (value && (!live || value.timestamp > live.timestamp)) {
             session.put(value)
+            syncSession(value)
+        }
     }, [value, live])
     return [value, setValue]
 }

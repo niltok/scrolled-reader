@@ -1,20 +1,23 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { List, Map } from 'immutable'
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { bookTable, session } from './storage'
+import { bookTable } from './storage'
 import { Elem } from './types'
-import { throttle } from 'lodash'
 import { useSession } from './hook'
-import { Injection } from './injection'
 
 function renderElem(
     elem: Elem, 
     table: Map<string, string>, 
     move: (pos: number) => void, 
     key?: string | number, 
-    ref?: (e: HTMLElement) => void
+    ref?: (e: HTMLElement | null) => void,
+    root?: boolean
 ): JSX.Element {
+    if (elem.label == '#text') {
+        if (ref) return <p ref={ref} key={key}>{elem.content}</p>
+        else return <React.Fragment key={key}>{elem.content}</React.Fragment>
+    }
     return React.createElement(elem.label, {
         key,
         ref,
@@ -153,7 +156,7 @@ export function Viewer() {
     // 图片 Blob URL
     const table = useMemo(() => {
         if (!book) return Map<string, string>()
-        return Map(book.pic).map((val) => URL.createObjectURL(val))
+        return Map(book.pic).map((val) => URL.createObjectURL(new Blob([val.data], { type: val.type })))
     }, [book])
     useEffect(() => () => {table.forEach((val) => URL.revokeObjectURL(val))}, [])
 
@@ -170,6 +173,16 @@ export function Viewer() {
         height: '100%',
         overflow: 'hidden',
     }}>
+        <div style={{
+            position: 'relative',
+            left: 0,
+            top: '50%',
+            padding: '1em',
+            borderTop: '1px solid #ff000080',
+            fontSize: '0.5em',
+            lineHeight: 0,
+            color: '#ff0000',
+        }}>{info.pos}</div>
         <div ref={viewer} className='viewer' style={{
             position: 'relative',
             top: (box.current?.offsetHeight || 0) / 2 - offset - tempOffset,
@@ -179,9 +192,8 @@ export function Viewer() {
                 table, 
                 pos => setInfo(info => info ? { ...info, pos, per: 0, timestamp: Date.now() } : info), 
                 i + top, 
-                (e: HTMLElement) => { domRef = domRef.push(e) }
+                (e: HTMLElement | null) => { if (e) domRef = domRef.push(e) }
             ))}
         </div>
-        <Injection />
     </div>)
 }

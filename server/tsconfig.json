@@ -1,0 +1,11 @@
+{
+    "include": ["."],
+    "compilerOptions": {
+        "strict": true,
+        "allowJs": false,
+        "moduleResolution": "node",
+        "outDir": "./dist",
+        "noImplicitAny": false,
+        "skipLibCheck": true,
+    }
+}

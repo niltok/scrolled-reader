@@ -4,8 +4,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Main } from './main'
 import { Viewer } from './viewer'
 import { Subscribe } from '@react-rxjs/core'
-
-const { StrictMode, useEffect } = React
+import { Injection } from './injection'
+import { useState, StrictMode, useEffect } from 'react'
 
 async function persist() {
     return await (navigator.storage && navigator.storage.persist &&
@@ -25,6 +25,7 @@ function Root() {
     }, [])
     return (
     <Subscribe>
+        <Injection />
         <BrowserRouter>
             <Routes>
                 <Route path='/' element={ <Main /> }></Route>

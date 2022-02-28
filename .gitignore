@@ -1,3 +1,7 @@
+client/dist
+server/dist
+cert
+
 # Lock
 yarn.lock
 package-lock.json
